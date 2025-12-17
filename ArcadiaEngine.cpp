@@ -13,7 +13,7 @@
 #include <iostream>
 #include <map>
 #include <set>
-#include <stdexcept>
+
 using namespace std;
 
 // =========================================================
@@ -102,39 +102,7 @@ int InventorySystem::optimizeLootSplit(int n, vector<int>& coins) {
     // TODO: Implement partition problem using DP
     // Goal: Minimize |sum(subset1) - sum(subset2)|
     // Hint: Use subset sum DP to find closest sum to total/2
-    int sum = 0;
-    for(int i = 0; i < n; i++) {
-        if(coins[i] < 0) {throw invalid_argument("Negative coin values not supported");}
-        sum+=coins[i];
-    }
-    vector<bool> DP(sum+1, false); //DP covers sums from 0 to the total sum (sum variable)
-    DP[0] = true;
-
-    //O(n x sum)
-    for(int i =0; i < n; i++) {
-        int c = coins[i];
-        for (int s = sum; s >= c; --s) { //we loop backwards to avoid repeating any coin
-            DP[s] = DP[s] || DP[s - c];
-        }
-    }
-
-    //we want closest subset to sum/2 because : A-B is (sum-B)-B which equals sum-2B so if B=sum/2 then sum-2B = zero(min dfference)
-    //we don't need to check bigger values than sum/2 because any subset sum above sum/2 has a mirror subset below sum/2 that gives the same difference
-
-    int halfSum = sum / 2;
-    int closestToHalf = 0;
-
-    //O(halfSum) but when adding O(halfSum) to O(n x sum), total complexity remains: O(n x sum)
-    for(int i = halfSum; i>=0; i--) {
-      if(DP[i]) {
-          //we take the largest subset sum (closest to sum/2) where DP is true and break the loop
-        closestToHalf = i;
-        break;
-      }
-    }
-
-    //(sum - closestToHalf) - closestToHalf just like A-B is the same as (sum-B) - B
-    return sum - 2* closestToHalf;
+    return 0;
 }
 
 int InventorySystem::maximizeCarryValue(int capacity, vector<pair<int, int>>& items) {

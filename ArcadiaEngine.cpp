@@ -125,28 +125,155 @@ long long InventorySystem::countStringPossibilities(string s) {
 // =========================================================
 
 bool WorldNavigator::pathExists(int n, vector<vector<int>>& edges, int source, int dest) {
-    // TODO: Implement path existence check using BFS or DFS
-    // edges are bidirectional
+    if (source == dest) return true;
+    
+    // Build adjacency list for undirected graph
+    vector<vector<int>> adj(n);
+    for (const auto& edge : edges) {
+        int u = edge[0], v = edge[1];
+        adj[u].push_back(v);
+        adj[v].push_back(u);  // Bidirectional
+    }
+    
+    // BFS for undirected graph
+    vector<bool> visited(n, false);
+    queue<int> q;
+    
+    visited[source] = true;
+    q.push(source);
+    
+    while (!q.empty()) {
+        int curr = q.front();
+        q.pop();
+        
+        if (curr == dest) return true;
+        
+        for (int neighbor : adj[curr]) {
+            if (!visited[neighbor]) {
+                visited[neighbor] = true;
+                q.push(neighbor);
+            }
+        }
+    }
+    
     return false;
 }
 
+// Union-Find (Disjoint Set Union) for Kruskal's MST
+struct DSU {
+    vector<int> parent, rank;
+    
+    DSU(int n) {
+        parent.resize(n);
+        rank.resize(n, 0);
+        for (int i = 0; i < n; i++) parent[i] = i;
+    }
+    
+    int find(int x) {
+        if (parent[x] != x) {
+            parent[x] = find(parent[x]);  // Path compression
+        }
+        return parent[x];
+    }
+    
+    bool unite(int x, int y) {
+        int rx = find(x);
+        int ry = find(y);
+        
+        if (rx == ry) return false;
+        
+        // Union by rank
+        if (rank[rx] < rank[ry]) {
+            parent[rx] = ry;
+        } else if (rank[rx] > rank[ry]) {
+            parent[ry] = rx;
+        } else {
+            parent[ry] = rx;
+            rank[rx]++;
+        }
+        return true;
+    }
+};
+
 long long WorldNavigator::minBribeCost(int n, int m, long long goldRate, long long silverRate,
                                        vector<vector<int>>& roadData) {
-    // TODO: Implement Minimum Spanning Tree (Kruskal's or Prim's)
-    // roadData[i] = {u, v, goldCost, silverCost}
-    // Total cost = goldCost * goldRate + silverCost * silverRate
-    // Return -1 if graph cannot be fully connected
-    return -1;
+    // Build edge list with computed costs (undirected graph)
+    vector<vector<long long>> edges;
+    for (const auto& road : roadData) {
+        int u = road[0], v = road[1];
+        long long gold = road[2], silver = road[3];
+        long long cost = gold * goldRate + silver * silverRate;
+        edges.push_back({cost, (long long)u, (long long)v});
+    }
+    
+    // Kruskal's MST algorithm for undirected graph
+    sort(edges.begin(), edges.end());
+    
+    DSU dsu(n);
+    long long total = 0;
+    int edgesUsed = 0;
+    
+    for (const auto& e : edges) {
+        long long cost = e[0];
+        int u = e[1], v = e[2];
+        
+        if (dsu.unite(u, v)) {
+            total += cost;
+            edgesUsed++;
+            if (edgesUsed == n - 1) break;  // MST complete
+        }
+    }
+    
+    // Check if all cities can be connected
+    return (edgesUsed == n - 1) ? total : -1;
 }
 
 string WorldNavigator::sumMinDistancesBinary(int n, vector<vector<int>>& roads) {
-    // TODO: Implement All-Pairs Shortest Path (Floyd-Warshall)
-    // Sum all shortest distances between unique pairs (i < j)
-    // Return the sum as a binary string
-    // Hint: Handle large numbers carefully
-    return "0";
+    const long long INF = 1e18;
+    vector<vector<long long>> dist(n, vector<long long>(n, INF));
+    
+    // Initialize distances
+    for (int i = 0; i < n; i++) dist[i][i] = 0;
+    
+    // Build directed graph (teleporter network)
+    for (const auto& road : roads) {
+        int u = road[0], v = road[1];
+        long long w = road[2];
+        dist[u][v] = min(dist[u][v], w);  // Directed edge u->v
+    }
+    
+    // Floyd-Warshall for all-pairs shortest paths in directed graph
+    for (int k = 0; k < n; k++) {
+        for (int i = 0; i < n; i++) {
+            if (dist[i][k] == INF) continue;  // Optimization
+            for (int j = 0; j < n; j++) {
+                if (dist[k][j] == INF) continue;  // Optimization
+                dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j]);
+            }
+        }
+    }
+    
+    // Sum distances for all pairs i < j (directed distance i→j)
+    long long sum = 0;
+    for (int i = 0; i < n; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (dist[i][j] < INF) {
+                sum += dist[i][j];
+            }
+        }
+    }
+    
+    // Convert to binary string
+    if (sum == 0) return "0";
+    
+    string binary = "";
+    while (sum > 0) {
+        binary = to_string(sum % 2) + binary;
+        sum /= 2;
+    }
+    
+    return binary;
 }
-
 // =========================================================
 // PART D: SERVER KERNEL (Greedy)
 // =========================================================

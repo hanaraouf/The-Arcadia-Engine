@@ -141,15 +141,54 @@ int InventorySystem::maximizeCarryValue(int capacity, vector<pair<int, int>>& it
     // TODO: Implement 0/1 Knapsack using DP
     // items = {weight, value} pairs
     // Return maximum value achievable within capacity
-    return 0;
+
+    //DP is a vector of values
+    vector<int> DP(capacity + 1, 0); //capacity runs from 0 to capacity, DP[0] is when we carry weight 0, value 0 if c=w if DP[c-w] becomes 0
+    for (int i = 0; i < items.size(); i++) {
+        if (capacity < items[i].first) continue;
+        for (int c = capacity; c >= items[i].first ; c--) {
+            DP[c] = max(DP[c], DP[c - items[i].first] + items[i].second); // take the max value of(capacity with the item added (we subtract weight from remaining capacity) or without the item added), if we don't take max then we will overwrite each item value without taking only max
+        }
+
+    }
+    return DP[capacity]; //return max value
 }
 
 long long InventorySystem::countStringPossibilities(string s) {
     // TODO: Implement string decoding DP
     // Rules: "uu" can be decoded as "w" or "uu"
-    //        "nn" can be decoded as "m" or "nn"
+    //"nn" can be decoded as "m" or "nn"
     // Count total possible decodings
-    return 0;
+
+    int modulu = 1000000007;
+    int n = (int)s.length(); //s.length returns size_t type which is an unsigned integer
+    vector <int> dp(n + 1, 0);
+    long long result = 1; //multiplication identity equals 1 not zero, zero would ruin multiplication.
+
+    dp[0] = 1;
+    if (n>=1) dp[1] = 1; //make sure it is not an empty string or else dp[1] would crash
+    for (int i = 2; i <= n; i++) {
+        dp[i] = (dp[i - 1] + dp[i - 2]) % modulu; //use module because fibonacci grows exponentially, without module result would overflow.
+    }
+
+    for (int i = 0; i < n; ) { // O(n) as we only move forward with i or j no nested loops
+        if (s[i] == 'u') {
+            int j = i;
+            while (j < n && s[j] == 'u') j++;
+            int length = j - i; //length of u
+            result = (result * dp[length]) % modulu;
+            i = j;
+        } else if (s[i] == 'n') {
+            int j = i;
+            while (j < n && s[j] == 'n') j++;
+            int length = j - i; //length of n
+            result = (result * dp[length]) % modulu;
+            i = j;
+        } else {
+            i++; //move to the next character if it is not u or n
+        }
+    }
+    return result;
 }
 
 // =========================================================

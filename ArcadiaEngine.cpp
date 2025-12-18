@@ -283,7 +283,71 @@ int ServerKernel::minIntervals(vector<char>& tasks, int n) {
     // Same task must wait 'n' intervals before running again
     // Return minimum total intervals needed (including idle time)
     // Hint: Use greedy approach with frequency counting
-    return 0;
+    
+    // Base cases 
+    if(tasks.empty()) return 0;
+    if(tasks.size() == 1) return 1;
+    if(n == 0) return tasks.size(); // No cooling time
+
+    vector<char> schedule; // Vector to store the task or idle  
+
+    // Sort tasks in ascending order
+    sort(tasks.begin(), tasks.end());  // O(n log n)
+
+    // Frequency counter map O(n log k)
+    map<char, int> counter;
+    for( char task : tasks){
+        counter[task]++;
+    }
+
+    // Build priority queue for unique tasks based on frequency and task  
+    priority_queue<pair<int, char>> pq;
+    for(pair<char, int> task:counter){
+        pq.push({task.second, task.first}); // O( k log k)  
+    }
+   
+    // Initialize cooling queue and total intervals
+    queue <pair<int,pair<int ,char>>> cooling; // Pair< available_remaining, <task,frequency>
+    int totalIntervals = 0;
+    int remaining = tasks.size();
+    // Process tasks
+    while(remaining > 0){ // n times
+        totalIntervals++;
+        // If queue not empty or cooling task is available to reinsert into pq 
+        while(!cooling.empty() && cooling.front().first <= totalIntervals){
+            pq.push(cooling.front().second);// Reinsert into pq with remaining frequency
+            // Remove previous cooling entry
+            cooling.pop();
+        }
+
+        if(!pq.empty()){
+            pair<int, char> current = pq.top(); //O(1)
+            int freq = current.first;
+            char task = current.second;
+            pq.pop();// O(log k)
+            schedule.push_back(task);
+            // Execute task
+            freq--;
+            remaining--;
+            if(freq > 0){
+                // Put in cooling {next available time for current task, remaining frequency}
+                cooling.push({totalIntervals + n + 1, {freq, task}});// O(1) 
+            }
+        }else{
+            schedule.push_back('_'); // Idle
+        }
+
+    }
+    cout << "Schedule: ";
+    for (char c : schedule) {
+    if (c == '_') cout << "idle ";
+    else cout << c << " ";
+}
+    return totalIntervals;
+    
+    // Total Complexity = O(n log k) + O(k log k) + O(n log k) = O(n log k)
+    // Since k <=26 constant makes O(n)
+    // Time = O(n) +  O(n log n) = O(n log n)
 }
 
 // =========================================================

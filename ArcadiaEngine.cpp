@@ -104,14 +104,13 @@ int InventorySystem::optimizeLootSplit(int n, vector<int>& coins) {
     // Hint: Use subset sum DP to find closest sum to total/2
     int sum = 0;
     for(int i = 0; i < n; i++) {
-        if(coins[i] < 0) {throw invalid_argument("Negative coin values not supported");}
         sum+=coins[i];
     }
     vector<bool> DP(sum+1, false); //DP covers sums from 0 to the total sum (sum variable)
     DP[0] = true;
 
     //O(n x sum)
-    for(int i =0; i < n; i++) {
+    for(int i =0; i < coins.size(); i++) {
         int c = coins[i];
         for (int s = sum; s >= c; --s) { //we loop backwards to avoid repeating any coin
             DP[s] = DP[s] || DP[s - c];
@@ -160,9 +159,9 @@ long long InventorySystem::countStringPossibilities(string s) {
     //"nn" can be decoded as "m" or "nn"
     // Count total possible decodings
 
-    int modulu = 1000000007;
+    const int modulu = 1000000007;
     int n = (int)s.length(); //s.length returns size_t type which is an unsigned integer
-    vector <int> dp(n + 1, 0);
+    vector <long long> dp(n + 1, 0);
     long long result = 1; //multiplication identity equals 1 not zero, zero would ruin multiplication.
 
     dp[0] = 1;
